@@ -132,4 +132,12 @@ sudo vim /etc/apt/sources.list.d/docker.list
 sudo apt update
 ```
 
+## 使用SDKMAN管理软件包
 
+```shell
+# 安装 SAKMAN
+curl -s "https://get.sdkman.io" | bash
+
+# 帮助信息
+sudo sdk help
+```
