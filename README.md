@@ -134,10 +134,35 @@ sudo apt update
 
 ## 使用SDKMAN管理软件包
 
+[点击访问SDKMAN官方文档](https://sdkman.io/usage)
+
+### SDKMAN安装
+
 ```shell
-# 安装 SAKMAN
+# 安装 SAKMAN 
 curl -s "https://get.sdkman.io" | bash
+
+# 安装后需要打开一个新终端才能生效
+# 若想在在当前终端生效，执行此命令
+source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 # 帮助信息
 sudo sdk help
+
+
+# 列出可用SDK列表
+sdk list
+```
+
+### SDKMAN安装Java
+
+```shell
+# 如果你只是在单纯按照教程来做，可以直接使用此命令安装JDK8
+sdk install java 8.0.442-tem
+
+# JDK17
+sdk install java 17.0.14-tem
+
+# 设置为默认版本
+sdk default java 8.0.442-tem
 ```
