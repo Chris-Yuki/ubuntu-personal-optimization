@@ -166,3 +166,23 @@ sdk install java 17.0.14-tem
 # 设置为默认版本
 sdk default java 8.0.442-tem
 ```
+
+## Docker 部署Jenkins
+
+```yml
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk8  # 指定 JDK8 的 Jenkins 镜像 [[4]][[5]]
+    container_name: jenkins
+    ports:
+      - "8080:8080"    # Jenkins Web 界面端口
+      - "50000:50000"  # 用于分布式构建的端口 [[3]][[6]]
+    volumes:
+      - ./jenkins_home:/var/jenkins_home  # 挂载 Jenkins 数据目录 [[1]][[3]]
+      - /var/run/docker.sock:/var/run/docker.sock  # 允许 Jenkins 调用宿主机 Docker [[6]]
+    environment:
+      JAVA_OPTS: "-Xmx2048m -Xms512m"  # 可选：调整 JVM 内存参数 [[2]]
+    user: root  # 避免权限问题，或根据实际用户调整 [[8]]
+```
+
+
