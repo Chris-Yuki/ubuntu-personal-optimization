@@ -167,22 +167,137 @@ sdk install java 17.0.14-tem
 sdk default java 8.0.442-tem
 ```
 
-## Docker 部署Jenkins
+## Docker 安装 jenkins
+
+> 支持jdk8的最新版jenkins-LTS版本：jenkins-2.346.1
+
+### 拉取jenkins镜像
+
+```shell
+# 拉取镜像
+docker pull jenkins/jenkins:latest-jdk8
+
+# 创建jenkins数据目录
+sudo mkdir -p /data/jenkins_home
+
+# 注意 ：jenkins 容器默认以用户 ID 1000 运行，因此需要确保该目录对该用户可读写。 
+sudo chown -R 1000:1000 /data/jenkins_home
+```
+
+#### docker-compose-配置
+
+> 命名为docker-compose.yml
 
 ```yml
 services:
   jenkins:
-    image: jenkins/jenkins:lts-jdk8  # 指定 JDK8 的 Jenkins 镜像 [[4]][[5]]
+    image: jenkins/jenkins:lts-jdk8
     container_name: jenkins
     ports:
-      - "8080:8080"    # Jenkins Web 界面端口
-      - "50000:50000"  # 用于分布式构建的端口 [[3]][[6]]
+      - "8080:8080"   # 映射 jenkins Web 界面端口
+      - "50000:50000" # 映射 jenkins Agent 端口
     volumes:
-      - ./jenkins_home:/var/jenkins_home  # 挂载 Jenkins 数据目录 [[1]][[3]]
-      - /var/run/docker.sock:/var/run/docker.sock  # 允许 Jenkins 调用宿主机 Docker [[6]]
-    environment:
-      JAVA_OPTS: "-Xmx2048m -Xms512m"  # 可选：调整 JVM 内存参数 [[2]]
-    user: root  # 避免权限问题，或根据实际用户调整 [[8]]
+      - /data/jenkins_home:/var/jenkins_home # 将宿主机目录挂载到容器内
 ```
 
+#### 启动jenkins容器
 
+```shell
+# 在 docker-compose.yml 同级目录下运行（不推荐，见问题1）
+# sudo docker-compose up -d
+
+# 在 docker-compose.yml 使用 compose v2 运行（推荐）
+sudo docker compose up -d
+
+```
+
+##### 问题1：ModuleNotFoundError: No module named 'distutils'
+
+```shell
+<< EOF
+使用 docker-compose 运行时 提示缺少 distutils 软件包
+使用命令 sudo apt-get install python3-distutils 也无法解决
+提示ModuleNotFoundError
+查阅资料得知这个打包的软件包在 3.12 中已被弃用
+而 docker-compose 是基于 python 的compose v1 形式，自 2023 年 7 月 起，Compose V1 停止接收更新
+推荐使用 docker compose 是 compose v2 的形式，其他命令 例 up 、down 风格保持一致
+如 docker-compose up 等同于 docker compose up
+[https://github.com/rashadphz/farfalle/issues/32]
+EOF
+# 当前版本 Docker version 28.0.2, build 0442a73 已集成，使用 compose v2 形式即可运行
+# sudo apt install docker-compose-v2
+
+```
+
+### 配置jenkins国内源
+
+> 清华源404了，这里选择华为源
+> 地址：https://mirrors.huaweicloud.com/jenkins/updates/update-center.json
+>
+> 直接修改jenkins的工作目录中的hudson.model.UpdateCenter.xml文件
+> 例我的：/data/jenkins_home/hudson.model.UpdateCenter.xml
+>
+> ```shell
+> # 编辑配置文件
+> vim /data/jenkins_home/hudson.model.UpdateCenter.xml
+> ```
+
+#### 修改配置文件
+
+```xml
+<?xml version='1.1' encoding='UTF-8'?>
+<sites>
+  <site>
+    <id>default</id>
+    # 修改为华为源
+    <url>https://mirrors.huaweicloud.com/jenkins/updates/update-center.json</url>
+  </site>
+</sites>
+```
+
+#### 重启 jenkins 容器
+
+```shell
+# 重启容器
+systemctl restart jenkins
+```
+
+### 登录jenkins
+
+> 换源结束后，按照【ip:8080】访问 jenkins web 页面，例：http://192.168.0.31:8080/
+
+```shell
+<<EOF
+密码位置位于/var/jenkins_home/secrets/initialAdminPassword
+我们将jenkins_home映射到了/data/jenkins_home
+EOF
+# 获取解锁密码
+vim /data/jenkins_home/secrets/initialAdminPassword
+```
+
+#### 问题2：由于版本过低无法安装插件
+
+```shell
+<<EOF
+还好我们使用的是 docker 方式安装，升级起来比较容易
+EOF
+# 第一步，回到 docker-compose.yml 所在路径
+# 此命令会删除之前创建的 docker 容器
+sudo docker compose down
+
+
+<<EOF
+接下来编辑 docker-compose.yml 文件
+将 image: jenkins/jenkins:lts-jdk8 改为 image: jenkins/jenkins:lts
+然后重新创建容器
+EOF
+# 编辑文件
+vim docker-compose.yml
+
+# 编辑完成后启动
+sudo docker compose up -d
+
+<<EOF
+如果忘记密码，可以看下这个文件 jenkins_home/secrets/initialAdminPassword
+EOF
+```
