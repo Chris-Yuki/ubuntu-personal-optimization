@@ -180,7 +180,7 @@ docker pull jenkins/jenkins:latest-jdk8
 # 创建jenkins数据目录
 sudo mkdir -p /data/jenkins_home
 
-# 注意 ：jenkins 容器默认以用户 ID 1000 运行，因此需要确保该目录对该用户可读写。 
+# 注意 ：jenkins 容器默认以用户 ID 1000 运行，因此需要确保该目录对该用户可读写。（重要！！！
 sudo chown -R 1000:1000 /data/jenkins_home
 ```
 
@@ -233,10 +233,10 @@ EOF
 
 > 清华源404了，这里选择华为源
 > 地址：https://mirrors.huaweicloud.com/jenkins/updates/update-center.json
->
+> 
 > 直接修改jenkins的工作目录中的hudson.model.UpdateCenter.xml文件
 > 例我的：/data/jenkins_home/hudson.model.UpdateCenter.xml
->
+> 
 > ```shell
 > # 编辑配置文件
 > vim /data/jenkins_home/hudson.model.UpdateCenter.xml
