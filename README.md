@@ -167,6 +167,34 @@ sdk install java 17.0.14-tem
 sdk default java 8.0.442-tem
 ```
 
+### SDKMAN 安装 Maven
+
+```shell
+# 查询 maven 可安装列表（按q退出）
+sdk list maven
+
+# 安装 maven 3.9.9
+sdk install maven 3.9.9
+
+# 查看 maven 版本以及目录
+mvn -v
+```
+
+#### Maven 换源
+
+```shell
+# 安装后建议使用 chsrc 找出可用源手动换源
+chsrc set maven
+
+# 注：需要手动换源！！！
+<mirror>
+  <id>huawei</id>
+  <mirrorOf>*</mirrorOf>
+  <name>华为开源镜像站</name>
+  <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+</mirror>
+```
+
 ## Docker 安装 jenkins
 
 > 支持jdk8的最新版jenkins-LTS版本：jenkins-2.346.1
@@ -233,10 +261,10 @@ EOF
 
 > 清华源404了，这里选择华为源
 > 地址：https://mirrors.huaweicloud.com/jenkins/updates/update-center.json
-> 
+>
 > 直接修改jenkins的工作目录中的hudson.model.UpdateCenter.xml文件
 > 例我的：/data/jenkins_home/hudson.model.UpdateCenter.xml
-> 
+>
 > ```shell
 > # 编辑配置文件
 > vim /data/jenkins_home/hudson.model.UpdateCenter.xml
@@ -300,4 +328,65 @@ sudo docker compose up -d
 <<EOF
 如果忘记密码，可以看下这个文件 jenkins_home/secrets/initialAdminPassword
 EOF
+```
+
+### 将jdk8映射到容器
+
+> 因为改用了 jenkins 最新版，默认 jdk 是17，这里我的项目需要用 jdk8 打包，所以需要将宿主机的 jdk 8 映射到容器中
+
+#### 修改 docker-compose.yml 文件
+
+```yml
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"   # 映射 Jenkins Web 界面端口
+      - "50000:50000" # 映射 Jenkins Agent 端口
+    volumes:
+      - /data/jenkins_home:/var/jenkins_home # 将宿主机目录挂载到容器内
+      # 左边的是宿主机的 jdk 目录，我们上述使用sdkman 默认是安装到此目录，如果你安装到了其他目录需要修改（可以使用whereis java 查看
+      # 注：此目录是 root 目录，需要确保你拥有 root 权限
+      - /root/.sdkman/candidates/java/8.0.442-tem:/java/8.0.442-tem # 映射 JDK
+```
+
+#### 重新启动 docker compose
+
+```shell
+# 切换到 docker-compose.yml 所在目录,删除容器
+sudo docker compose down
+
+# 重新创建
+sudo docker compose up
+```
+
+### 将 Maven 映射到容器
+
+```shell
+# 如果是按照上述教程安装的 maven 则默认安装目录在 /root/.sdkman/candidates/maven/3.9.9
+
+```
+
+#### 修改 docker-compose.yml文件
+
+##### 问题3：安装 Maven 后添加环境变量后重新运行失败
+
+> 原因：因为只给 maven 添加了环境变量，容器依赖于自带的 jdk 环境变量，无法运行，所以
+
+```yml
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"   # 映射 Jenkins Web 界面端口
+      - "50000:50000" # 映射 Jenkins Agent 端口
+    volumes:
+      - /data/jenkins_home:/var/jenkins_home # 持久化 Jenkins 数据
+      - /root/.sdkman/candidates/java/8.0.442-tem:/data/java/8.0.442-tem # 映射宿主机的 JDK 8 路径
+      - /root/.sdkman/candidates/maven/3.9.9:/data/maven/3.9.9 # 映射宿主机的 Maven 路径
+    environment:
+      - MAVEN_HOME=/data/maven/3.9.9 # 设置 Maven 的环境变量
+      - PATH=/opt/java/openjdk/bin:/data/maven/3.9.9/bin:${PATH} # 将容器自带的 JDK 17 和 Maven 的 bin 目录添加到 PATH
 ```
