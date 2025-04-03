@@ -390,3 +390,49 @@ services:
       - MAVEN_HOME=/data/maven/3.9.9 # 设置 Maven 的环境变量
       - PATH=/opt/java/openjdk/bin:/data/maven/3.9.9/bin:${PATH} # 将容器自带的 JDK 17 和 Maven 的 bin 目录添加到 PATH
 ```
+
+## Jenkins 配置 前端项目
+
+> 发现了官方源可以直连
+>
+> 官方的镜像地址池：[Mirrorstats](https://get.jenkins.io/index.html?mirrorstats)
+>
+> 其他可用 jenkins 镜像源：[http://ftp.belnet.be](http://ftp.belnet.be/)
+>
+> 参考：[jenkins 安装插件依赖的坑 - 昆虫白 - 博客园](https://www.cnblogs.com/byhh/p/17641238.html)
+
+### 配置 gitlab
+
+1. 配置一个 gitlab api 令牌
+
+2.
+
+3.
+
+### 安装NVM
+
+```shell
+# 脚本一键安装
+sudo curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+
+# 配置变量
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+
+# 刷新 配置
+source ~/.bashrc
+
+# 查看 nvm 版本
+nvm -v
+
+# 安装指定版本 nodejs
+nvm install 14.21.3
+
+# 查看 nodejs 版本
+node -v
+
+# 设置默认 nodejs 版本
+nvm use 14.21.3
+```
+
+
